@@ -118,8 +118,7 @@
             
             const { data: tasks, error } = await _supabase
                 .from('tasks')
-                .select('*')
-                .order('created_at', { ascending: false });
+                .select('*'); // Cukup select bintang aja
 
             if (error) {
                 board.innerHTML = `<p style="color:red">Error: ${error.message}</p>`;
