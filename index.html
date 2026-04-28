@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Tracker Elegan</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            --card-bg: rgba(255, 255, 255, 0.07);
+            --card-border: rgba(255, 255, 255, 0.15);
+            --text-main: #ffffff;
+            --text-muted: #b0c4de;
+            --accent: #00d2ff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 40px 20px;
+            background-attachment: fixed;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            font-weight: 600;
+            background: -webkit-linear-gradient(45deg, #00d2ff, #3a7bd5);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+
+        /* Form Input */
+        .add-task-container {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--card-border);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 40px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        }
+
+        input {
+            flex: 1;
+            padding: 12px 15px;
+            border-radius: 8px;
+            border: 1px solid var(--card-border);
+            background: rgba(0, 0, 0, 0.2);
+            color: white;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        input::placeholder { color: #888; }
+        input:focus { border-color: var(--accent); }
+
+        button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(45deg, #00d2ff, #3a7bd5);
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 210, 255, 0.4);
+        }
+
+        /* Grid Mapel */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--card-border);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s, border-color 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent);
+        }
+
+        .card h3 {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--card-border);
+            color: var(--accent);
+        }
+
+        .task-list {
+            list-style: none;
+        }
+
+        .task-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            transition: 0.2s;
+        }
+
+        .task-item:hover { background: rgba(0, 0, 0, 0.4); }
+
+        .task-link {
+            color: var(--text-main);
+            text-decoration: none;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 80%;
+            transition: color 0.2s;
+        }
+
+        .task-link:hover { color: var(--accent); }
+
+        .delete-btn {
+            background: transparent;
+            color: #ff4757;
+            padding: 5px;
+            font-size: 1rem;
+            box-shadow: none;
+            margin: 0;
+        }
+
+        .delete-btn:hover {
+            transform: scale(1.1);
+            box-shadow: none;
+        }
+
+        /* Responsif */
+        @media (max-width: 600px) {
+            .add-task-container { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Pencatatan Tugas X TKJ 4</h1>
+            <p>Manajemen link tugas estetik & anti hilang.</p>
+        </header>
+
+        <div class="add-task-container">
+            <input type="text" id="mapel" placeholder="Mata Pelajaran (Contoh: Pwn, Web, Math)..." required>
+            <input type="text" id="judul" placeholder="Judul Tugas..." required>
+            <input type="url" id="link" placeholder="https://link-tugas-kamu.com" required>
+            <button onclick="addTask()">+ Tambah</button>
+        </div>
+
+        <div class="grid" id="board">
+            </div>
+    </div>
+
+    <script>
+        // Mengambil data dari penyimpanan browser (Local Storage)
+        let tasksData = JSON.parse(localStorage.getItem('nexusTasks')) || {};
+
+        // Fungsi untuk merender UI
+        function renderTasks() {
+            const board = document.getElementById('board');
+            board.innerHTML = '';
+
+            for (const mapel in tasksData) {
+                // Buat Kartu
+                const card = document.createElement('div');
+                card.className = 'card';
+                
+                // Judul Mapel
+                const title = document.createElement('h3');
+                title.innerText = mapel;
+                card.appendChild(title);
+
+                // Daftar Tugas
+                const ul = document.createElement('ul');
+                ul.className = 'task-list';
+
+                tasksData[mapel].forEach((task, index) => {
+                    const li = document.createElement('li');
+                    li.className = 'task-item';
+
+                    li.innerHTML = `
+                        <a href="${task.link}" target="_blank" class="task-link" title="${task.judul}">
+                            ${task.judul}
+                        </a>
+                        <button class="delete-btn" onclick="deleteTask('${mapel}', ${index})" title="Hapus Tugas">✖</button>
+                    `;
+                    ul.appendChild(li);
+                });
+
+                card.appendChild(ul);
+                board.appendChild(card);
+            }
+        }
+
+        // Fungsi Tambah Tugas
+        function addTask() {
+            const mapelInput = document.getElementById('mapel').value.trim();
+            const judulInput = document.getElementById('judul').value.trim();
+            let linkInput = document.getElementById('link').value.trim();
+
+            if (!mapelInput || !judulInput || !linkInput) {
+                alert("Isi semua kolom dulu, Bang!");
+                return;
+            }
+
+            // Validasi link sederhana (tambah http jika belum ada)
+            if (!linkInput.startsWith('http://') && !linkInput.startsWith('https://')) {
+                linkInput = 'https://' + linkInput;
+            }
+
+            // Jika mapel belum ada di database, buat array baru
+            if (!tasksData[mapelInput]) {
+                tasksData[mapelInput] = [];
+            }
+
+            // Masukkan data baru
+            tasksData[mapelInput].push({
+                judul: judulInput,
+                link: linkInput
+            });
+
+            saveData();
+            renderTasks();
+
+            // Kosongkan form input
+            document.getElementById('judul').value = '';
+            document.getElementById('link').value = '';
+        }
+
+        // Fungsi Hapus Tugas
+        function deleteTask(mapel, index) {
+            tasksData[mapel].splice(index, 1);
+            
+            // Jika tugas di mapel itu kosong, hapus mapelnya sekalian
+            if (tasksData[mapel].length === 0) {
+                delete tasksData[mapel];
+            }
+
+            saveData();
+            renderTasks();
+        }
+
+        // Simpan ke Local Storage
+        function saveData() {
+            localStorage.setItem('nexusTasks', JSON.stringify(tasksData));
+        }
+
+        // Render pertama kali saat web dibuka
+        renderTasks();
+    </script>
+</body>
+</html>
