@@ -3,169 +3,310 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gitulah pokoknya</title>
+    <title>Gitulah Pokoknya</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-gradient: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-            --card-bg: rgba(255, 255, 255, 0.07);
-            --card-border: rgba(255, 255, 255, 0.15);
-            --text-main: #ffffff;
-            --text-muted: #b0c4de;
+            --bg-dark: #0a0f16;
+            --bg-card: rgba(16, 24, 39, 0.7);
+            --border-glow: rgba(0, 210, 255, 0.3);
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
             --accent: #00d2ff;
+            --accent-hover: #3a7bd5;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Space Grotesk', sans-serif; }
 
         body {
-            background: var(--bg-gradient);
+            background-color: var(--bg-dark);
+            background-image: radial-gradient(circle at top right, rgba(0, 210, 255, 0.1), transparent 40%),
+                              radial-gradient(circle at bottom left, rgba(58, 123, 213, 0.1), transparent 40%);
             color: var(--text-main);
             min-height: 100vh;
             padding: 40px 20px;
             background-attachment: fixed;
+            overflow-x: hidden;
         }
 
-        .container { max-width: 1000px; margin: 0 auto; }
-
-        header { text-align: center; margin-bottom: 40px; }
-        header h1 {
-            font-size: 2.5rem;
-            background: -webkit-linear-gradient(45deg, #00d2ff, #3a7bd5);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+        /* --- SECURITY GATE (LOGIN) --- */
+        #login-gate {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #05080f; z-index: 9999;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            transition: opacity 0.5s ease;
         }
-
-        .add-task-container {
-            background: var(--card-bg);
+        .login-box {
+            background: rgba(0,0,0,0.5); border: 1px solid var(--border-glow);
+            padding: 40px; border-radius: 20px; text-align: center;
+            box-shadow: 0 0 30px rgba(0, 210, 255, 0.1);
             backdrop-filter: blur(10px);
-            border: 1px solid var(--card-border);
-            padding: 20px;
-            border-radius: 15px;
-            margin-bottom: 40px;
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
+        }
+        .login-box h2 { color: var(--accent); margin-bottom: 5px; font-weight: 700; letter-spacing: 2px;}
+        .login-box p { color: var(--text-muted); margin-bottom: 25px; font-size: 0.9rem; }
+        .login-box input {
+            width: 100%; padding: 15px; margin-bottom: 20px; text-align: center;
+            background: rgba(255,255,255,0.05); border: 1px solid var(--border-glow);
+            border-radius: 10px; color: white; font-size: 1.2rem; outline: none; letter-spacing: 5px;
+        }
+        .login-box button { width: 100%; }
+
+        /* --- MAIN APP UI --- */
+        #app-content { display: none; max-width: 1100px; margin: 0 auto; animation: fadeIn 1s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        header { text-align: center; margin-bottom: 50px; }
+        header h1 {
+            font-size: 3rem; font-weight: 700;
+            background: -webkit-linear-gradient(45deg, #00d2ff, #3a7bd5);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            text-transform: uppercase; letter-spacing: 2px;
         }
 
-        input {
-            flex: 1; padding: 12px; border-radius: 8px; border: 1px solid var(--card-border);
-            background: rgba(0, 0, 0, 0.2); color: white; outline: none;
+        /* Glassmorphism Controls */
+        .controls-container {
+            background: var(--bg-card); backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.1); padding: 25px;
+            border-radius: 20px; margin-bottom: 40px; display: flex; gap: 15px; flex-wrap: wrap;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
+
+        input, select {
+            flex: 1; padding: 15px; border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(0, 0, 0, 0.3); color: white; outline: none; font-size: 1rem;
+            transition: all 0.3s;
+        }
+        input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 15px rgba(0, 210, 255, 0.2); }
+        select option { background: #0f172a; color: white; } /* Styling dropdown items */
 
         button {
-            padding: 12px 25px; border: none; border-radius: 8px;
+            padding: 15px 30px; border: none; border-radius: 12px;
             background: linear-gradient(45deg, #00d2ff, #3a7bd5);
-            color: white; font-weight: 600; cursor: pointer; transition: 0.2s;
+            color: white; font-weight: 700; font-size: 1rem; cursor: pointer;
+            transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 1px;
         }
+        button:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0, 210, 255, 0.3); }
 
-        button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0, 210, 255, 0.4); }
-
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; }
-
+        /* Grid & Cards */
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 30px; }
+        
         .card {
-            background: var(--card-bg); backdrop-filter: blur(10px);
-            border: 1px solid var(--card-border); border-radius: 15px; padding: 20px;
+            background: var(--bg-card); backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.05); border-radius: 20px; padding: 25px;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative; overflow: hidden;
         }
+        .card::before { /* Aksen garis atas card */
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px;
+            background: linear-gradient(90deg, #00d2ff, transparent);
+        }
+        .card:hover { transform: translateY(-10px); border-color: var(--border-glow); box-shadow: 0 15px 30px rgba(0,0,0,0.6); }
 
-        .card h3 { color: var(--accent); margin-bottom: 15px; border-bottom: 1px solid var(--card-border); padding-bottom: 5px; }
+        .card-header { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .card-header h3 { color: white; font-size: 1.4rem; font-weight: 700; margin-bottom: 5px; }
+        .card-header p { color: var(--accent); font-size: 0.85rem; font-weight: 600; opacity: 0.8; } /* Nama Guru */
 
         .task-list { list-style: none; }
         .task-item {
             display: flex; justify-content: space-between; align-items: center;
-            background: rgba(0, 0, 0, 0.2); padding: 10px; border-radius: 8px; margin-bottom: 8px;
+            background: rgba(0, 0, 0, 0.4); padding: 12px 15px; border-radius: 10px; margin-bottom: 10px;
+            border: 1px solid transparent; transition: all 0.2s;
         }
+        .task-item:hover { border-color: rgba(255,255,255,0.1); background: rgba(0,0,0,0.6); }
 
-        .task-link { color: white; text-decoration: none; font-size: 0.9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 80%; }
+        .task-link { color: #e2e8f0; text-decoration: none; font-size: 0.95rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 85%; transition: color 0.2s; }
         .task-link:hover { color: var(--accent); }
 
-        .delete-btn { background: transparent; color: #ff4757; font-size: 1.2rem; padding: 0 5px; box-shadow: none; }
-        .delete-btn:hover { transform: scale(1.2); box-shadow: none; }
+        .delete-btn {
+            background: transparent; color: #ef4444; font-size: 1.2rem; padding: 5px;
+            box-shadow: none; width: auto; border-radius: 5px;
+        }
+        .delete-btn:hover { background: rgba(239, 68, 68, 0.2); transform: scale(1.1); box-shadow: none;}
 
-        @media (max-width: 600px) { .add-task-container { flex-direction: column; } }
+        @media (max-width: 768px) { .controls-container { flex-direction: column; } }
     </style>
 </head>
 <body>
 
-    <div class="container">
+    <div id="login-gate">
+        <div class="login-box">
+            <h2>SYSTEM LOCKED</h2>
+            <p>Protected by Anti-SSTI & WAF Firewall</p>
+            <input type="password" id="passInput" placeholder="ENTER PIN" autocomplete="off" onkeypress="if(event.key === 'Enter') checkPassword()">
+            <button onclick="checkPassword()">VERIFY ACCESS</button>
+        </div>
+    </div>
+
+    <div id="app-content">
         <header>
-            <h1>Pencatatan Tugas</h1>
-            <p>Data tersimpan di adadeh pokoknya</p>
+            <h1>Kelas Gitulah Pokoknya</h1>
+            <p style="color: var(--text-muted); font-size: 1.1rem; letter-spacing: 1px;">Secure Task Management System</p>
         </header>
 
-        <div class="add-task-container">
-            <input type="text" id="mapel" placeholder="Mata Pelajaran...">
-            <input type="text" id="judul" placeholder="Judul Tugas...">
+        <div class="controls-container">
+            <select id="mapel">
+                <option value="" disabled selected>-- Pilih Mata Pelajaran --</option>
+                <option value="B ing">Bahasa Inggris</option>
+                <option value="Matematika">Matematika</option>
+                <option value="Seni Budaya">Seni Budaya</option>
+                <option value="B Indo">Bahasa Indonesia</option>
+                <option value="Sejarah">Sejarah</option>
+                <option value="PKN">PKN</option>
+                <option value="B Jawa">Bahasa Jawa</option>
+                <option value="Informatika">Informatika</option>
+                <option value="KKA">KKA</option>
+                <option value="TKJ">TKJ</option>
+                <option value="IPAS">IPAS</option>
+                <option value="Robotik">Robotik</option>
+            </select>
+            <input type="text" id="judul" placeholder="Judul Tugas (Ex: Bab 1)...">
             <input type="text" id="link" placeholder="Link (URL)...">
-            <button onclick="addTask()">+ Tambah</button>
+            <button onclick="addTask()">+ Submit</button>
         </div>
 
         <div class="grid" id="board">
-            <p style="text-align:center; grid-column: 1/-1;">Menghubungkan ke database...</p>
+            <p style="text-align:center; grid-column: 1/-1; color: var(--text-muted);">Menghubungkan ke database aman...</p>
         </div>
     </div>
 
     <script>
-        // --- KONFIGURASI SUPABASE ---
+        // --- 1. SISTEM LOGIN SEDERHANA ---
+        function checkPassword() {
+            const pass = document.getElementById('passInput').value;
+            const correctPin = "65536"; // <<< GANTI PASSWORD KAMU DI SINI
+
+            if (pass === correctPin) {
+                document.getElementById('login-gate').style.opacity = '0';
+                setTimeout(() => {
+                    document.getElementById('login-gate').style.display = 'none';
+                    document.getElementById('app-content').style.display = 'block';
+                    // Render tugas setelah berhasil login
+                    renderTasks(); 
+                }, 500);
+            } else {
+                alert("ACCESS DENIED: PIN Salah!");
+                document.getElementById('passInput').value = '';
+            }
+        }
+
+// --- 2. FUNGSI PENCARIAN GURU (ANTI TYPO & CASE INSENSITIVE) ---
+        // Kita nggak pakai object lagi, tapi pakai fungsi deteksi kata kunci
+        function getPengampu(mapelInput) {
+            if (!mapelInput) return "Tim Guru";
+            
+            // Normalisasi: Ubah ke huruf kecil semua, hapus titik, dan spasi berlebih
+            // Contoh: "B. Ing ", "Bahasa inggris", "B INGGRIS" -> bakal jadi "b ing" atau sebangsanya
+            let m = mapelInput.toLowerCase().replace(/\./g, ' ').replace(/\s+/g, ' ').trim();
+
+            // Pengecekan berdasarkan kata kunci (Keyword Matching)
+            if (m.includes('inggris') || m.includes('ing')) return "Bu Jevi, Pak Andre";
+            if (m.includes('indo')) return "Pak Falah, Pak Rahardiyan"; // Deteksi 'b indo', 'indonesia'
+            if (m.includes('matematika') || m.includes('mtk') || m.includes('math')) return "Pak Abidin, Pak Tulus";
+            if (m.includes('seni') || m.includes('budaya') || m.includes('senbud')) return "Pak Agung";
+            if (m.includes('sejarah')) return "Bu Ana"; // Deteksi 'Sejarah', 'SEJARAH', 'sejarah'
+            if (m.includes('pkn') || m.includes('ppkn')) return "Bu Rara";
+            if (m.includes('jawa')) return "Pak Agus"; // Deteksi 'b jawa', 'bahasa jawa'
+            if (m.includes('informatika') || m.includes('info')) return "Pak Firman";
+            if (m.includes('kka')) return "Pak Nico";
+            if (m.includes('tkj')) return "Pak Yaniko, Pak Tito, Pak Adi";
+            if (m.includes('ipas')) return "Bu Chusnul, Pak Diaur";
+            if (m.includes('robotik') || m.includes('robot')) return "Pak Bagus";
+            
+            // Tambahan kalau ada data lama (kayak di screenshot ada PJOK)
+            if (m.includes('pjok') || m.includes('olahraga')) return "Pak Dimas";
+
+            // Kalau typo-nya udah kebangetan dan ga nangkep kata kunci sama sekali
+            return "Tim Guru";
+        }
+
+        // --- 3. KONFIGURASI SUPABASE ---
+        // PASTIIN URL DAN KEY LU MASIH ADA DI SINI YA BANG!
         const SUPABASE_URL = 'https://cuqffdprizrmlesivhhs.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN1cWZmZHByaXpybWxlc2l2aGhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMjE4NjgsImV4cCI6MjA5Mjg5Nzg2OH0.NFIEbTp34Owm6zlPqt9IamVvZUEMe95MggBB9He3HHg';
         
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // Fungsi Ambil Data
+        // --- 4. FUNGSI RENDER (MENAMPILKAN DATA) ---
         async function renderTasks() {
             const board = document.getElementById('board');
             
             const { data: tasks, error } = await _supabase
                 .from('tasks')
-                .select('*'); // Cukup select bintang aja
+                .select('*');
 
             if (error) {
-                board.innerHTML = `<p style="color:red">Error: ${error.message}</p>`;
+                board.innerHTML = `<p style="color:#ef4444; text-align:center;">Error: ${error.message}</p>`;
                 return;
             }
 
+            // Kelompokkan tugas berdasarkan mapel
             const grouped = tasks.reduce((acc, task) => {
-                if (!acc[task.mapel]) acc[task.mapel] = [];
-                acc[task.mapel].push(task);
+                let namaMapel = task.mapel || "Tanpa Mapel";
+                
+                // Normalisasi Judul Kartu Biar Nggak Dobel (Opsional tapi bagus)
+                // Jadi "SEJARAH" dan "Sejarah" bakal digabung jadi satu kartu "SEJARAH"
+                let keyMapel = namaMapel.toUpperCase(); 
+                
+                if (!acc[keyMapel]) acc[keyMapel] = [];
+                // Simpan nama asli buat ditampilin
+                task.mapelAsli = namaMapel; 
+                acc[keyMapel].push(task);
                 return acc;
             }, {});
 
             board.innerHTML = '';
-            for (const mapel in grouped) {
+            
+            for (const keyMapel in grouped) {
+                // Ambil 1 sample nama mapel asli dari grup ini untuk dicek gurunya
+                const sampleMapel = grouped[keyMapel][0].mapelAsli;
+                
+                // Panggil fungsi otak pencari guru yang kita buat di atas
+                const namaGuru = getPengampu(sampleMapel); 
+
                 const card = document.createElement('div');
                 card.className = 'card';
-                card.innerHTML = `<h3>${mapel}</h3><ul class="task-list"></ul>`;
+                card.innerHTML = `
+                    <div class="card-header">
+                        <h3>${keyMapel}</h3>
+                        <p>Pengampu: ${namaGuru}</p>
+                    </div>
+                    <ul class="task-list"></ul>
+                `;
                 
                 const ul = card.querySelector('ul');
-                grouped[mapel].forEach(t => {
+                grouped[keyMapel].forEach(t => {
                     const li = document.createElement('li');
                     li.className = 'task-item';
                     li.innerHTML = `
-                        <a href="${t.link}" target="_blank" class="task-link">${t.judul}</a>
-                        <button class="delete-btn" onclick="deleteTask(${t.id})">✖</button>
+                        <a href="${t.link}" target="_blank" class="task-link" title="${t.judul}">${t.judul}</a>
+                        <button class="delete-btn" onclick="deleteTask(${t.id})" title="Hapus Tugas">✖</button>
                     `;
                     ul.appendChild(li);
                 });
                 board.appendChild(card);
             }
-            if (tasks.length === 0) board.innerHTML = '<p style="text-align:center; grid-column:1/-1">Belum ada tugas.</p>';
+
+            if (tasks.length === 0) {
+                board.innerHTML = '<p style="text-align:center; grid-column:1/-1; color: var(--text-muted);">Belum ada tugas yang dicatat. Database bersih.</p>';
+            }
         }
 
-        // Fungsi Tambah Data
+        // --- 5. FUNGSI TAMBAH DATA ---
         async function addTask() {
-            const mapel = document.getElementById('mapel').value.trim();
+            const mapel = document.getElementById('mapel').value; // Sekarang ngambil dari dropdown
             const judul = document.getElementById('judul').value.trim();
             let link = document.getElementById('link').value.trim();
 
-            if (!mapel || !judul || !link) return alert("Isi semua dulu!");
+            if (!mapel || !judul || !link) return alert("System Warning: Semua kolom wajib diisi!");
             if (!link.startsWith('http')) link = 'https://' + link;
 
             const { error } = await _supabase
                 .from('tasks')
                 .insert([{ mapel, judul, link }]);
 
-            if (error) alert("Gagal: " + error.message);
+            if (error) alert("System Error: " + error.message);
             else {
                 document.getElementById('judul').value = '';
                 document.getElementById('link').value = '';
@@ -173,15 +314,13 @@
             }
         }
 
-        // Fungsi Hapus Data
+        // --- 6. FUNGSI HAPUS DATA ---
         async function deleteTask(id) {
-            if (!confirm("Hapus tugas ini?")) return;
+            if (!confirm("Otorisasi diperlukan: yakin nak hapus nii?")) return;
             const { error } = await _supabase.from('tasks').delete().eq('id', id);
-            if (error) alert("Gagal hapus");
+            if (error) alert("Penghapusan Gagal!");
             else renderTasks();
         }
-
-        renderTasks();
     </script>
 </body>
 </html>
